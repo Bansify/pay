@@ -17,6 +17,8 @@ export interface Env {
   AUTH_HUB_URL: string;
   APP_DOMAIN: string;
   PAY_INTERNAL_TOKEN?: string;
+  RAZORPAY_KEY_ID?: string;
+  RAZORPAY_KEY_SECRET?: string;
 }
 
 const JSON_HEADERS: Record<string, string> = {
@@ -100,6 +102,39 @@ function internalAuthorised(request: Request, env: Env): boolean {
   return diff === 0;
 }
 
+interface SubscriptionRow {
+  id: string;
+  product_id: string;
+  price_id: string;
+  status: string;
+  current_period_end: number | null;
+  cancel_at_period_end: number;
+}
+
+async function loadSubscriptions(env: Env, userId: string): Promise<Array<Record<string, unknown>>> {
+  const { results } = await env.DB.prepare(
+    `SELECT s.id, s.product_id, s.price_id, s.status, s.current_period_end, s.cancel_at_period_end,
+            p.name AS product_name, p.code AS product_code
+       FROM subscriptions s
+       LEFT JOIN products p ON p.id = s.product_id
+      WHERE s.user_id = ?
+      ORDER BY s.created_at DESC`,
+  )
+    .bind(userId)
+    .all<SubscriptionRow & { product_name?: string; product_code?: string }>();
+
+  return (results ?? []).map((row) => ({
+    id: row.id,
+    productId: row.product_id,
+    productName: row.product_name ?? null,
+    productCode: row.product_code ?? null,
+    priceId: row.price_id,
+    status: row.status,
+    currentPeriodEnd: row.current_period_end,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+  }));
+}
+
 async function handleProducts(env: Env): Promise<Response> {
   const { results } = await env.DB.prepare(
     `SELECT p.id, p.code, p.name, p.description, p.kind,
@@ -152,6 +187,7 @@ export default {
         configured: {
           internalToken: Boolean(env.PAY_INTERNAL_TOKEN),
           authHub: Boolean(env.AUTH_HUB_URL),
+          razorpay: Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET),
         },
       });
     }
@@ -165,6 +201,44 @@ export default {
       if (!internalAuthorised(request, env)) return json({ error: 'forbidden' }, 403);
       const userId = decodeURIComponent(serviceMatch[1]);
       return json({ userId, entitlements: await loadEntitlements(env, userId) });
+    }
+
+    if (path === '/api/v1/me/subscriptions' && request.method === 'GET') {
+      const userId = await currentUserId(request, env);
+      if (!userId) return json({ error: 'unauthenticated' }, 401);
+      return json({ userId, subscriptions: await loadSubscriptions(env, userId) });
+    }
+
+    if (path === '/api/v1/checkout' && request.method === 'POST') {
+      const userId = await currentUserId(request, env);
+      if (!userId) return json({ error: 'unauthenticated' }, 401);
+
+      const body = (await request.json().catch(() => null)) as { priceId?: string } | null;
+      const priceId = body?.priceId?.trim();
+      if (!priceId) return json({ error: 'price_required' }, 400);
+
+      const price = await env.DB.prepare(
+        `SELECT pr.id, pr.amount_paise, pr.currency, pr.interval, p.id AS product_id, p.name
+           FROM prices pr JOIN products p ON p.id = pr.product_id
+          WHERE pr.id = ? AND pr.active = 1 AND p.active = 1`,
+      )
+        .bind(priceId)
+        .first<{ id: string; amount_paise: number; currency: string; interval: string; product_id: string; name: string }>();
+
+      if (!price) return json({ error: 'unknown_price' }, 404);
+
+      // The provider is not wired yet: answer honestly instead of pretending to charge.
+      if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
+        return json({
+          error: 'payments_not_configured',
+          message: 'Checkout opens once the payment provider keys are installed.',
+          price: { id: price.id, amountPaise: price.amount_paise, currency: price.currency, interval: price.interval },
+          product: { id: price.product_id, name: price.name },
+        }, 503);
+      }
+
+      // Phase 2 continues here: create the provider order/subscription and return its checkout URL.
+      return json({ error: 'not_implemented' }, 501);
     }
 
     if (path === '/api/v1/me/entitlements' && request.method === 'GET') {

@@ -6,68 +6,160 @@
 <title>Bansify Pay</title>
 <meta name="description" content="One account, one bill — plans and add-ons for every Bansify product." />
 <style>
-  :root { color-scheme: light dark; --bg:#ffffff; --fg:#111318; --muted:#5f6673; --line:#e6e8ec; --card:#fafbfc; --accent:#0494f4; }
+  :root { color-scheme: light dark; --bg:#fff; --fg:#111318; --muted:#5f6673; --line:#e6e8ec; --card:#fafbfc; --accent:#0494f4; --danger:#d33; }
   @media (prefers-color-scheme: dark) { :root { --bg:#0d0f13; --fg:#f2f4f7; --muted:#9aa1ad; --line:#232833; --card:#14171d; } }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-  header { padding:56px 24px 24px; max-width:960px; margin:0 auto; }
-  h1 { font-size:clamp(28px,5vw,40px); margin:0 0 8px; letter-spacing:-0.02em; }
-  p.lede { color:var(--muted); margin:0; max-width:56ch; }
-  main { max-width:960px; margin:0 auto; padding:8px 24px 72px; }
-  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:32px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
-  .card h2 { margin:0 0 4px; font-size:18px; }
-  .card p { margin:0; color:var(--muted); font-size:14px; }
-  .price { margin:16px 0 0; font-size:24px; font-weight:650; letter-spacing:-0.02em; }
-  .price span { font-size:14px; font-weight:400; color:var(--muted); }
-  .tag { display:inline-block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid currentColor; border-radius:999px; padding:2px 8px; margin-bottom:12px; }
-  .status { margin-top:40px; padding:16px 20px; border:1px solid var(--line); border-radius:14px; color:var(--muted); font-size:14px; }
   a { color:var(--accent); }
+  header { max-width:960px; margin:0 auto; padding:40px 24px 8px; display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { font-size:22px; margin:0; letter-spacing:-0.01em; }
+  nav { margin-left:auto; display:flex; gap:16px; font-size:14px; }
+  nav a { text-decoration:none; color:var(--muted); }
+  nav a.active { color:var(--fg); font-weight:600; }
+  main { max-width:960px; margin:0 auto; padding:8px 24px 72px; }
+  .lede { color:var(--muted); max-width:60ch; margin:8px 0 0; }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:28px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:8px; }
+  .card h2 { margin:0; font-size:18px; }
+  .card p { margin:0; color:var(--muted); font-size:14px; }
+  .price { font-size:24px; font-weight:650; letter-spacing:-0.02em; margin-top:auto; }
+  .price span { font-size:14px; font-weight:400; color:var(--muted); }
+  .tag { align-self:flex-start; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid currentColor; border-radius:999px; padding:2px 8px; }
+  button { font:inherit; border-radius:999px; border:1px solid transparent; padding:10px 18px; background:var(--accent); color:#fff; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--fg); border-color:var(--line); }
+  button[disabled] { opacity:.55; cursor:default; }
+  .note { margin-top:20px; padding:14px 18px; border:1px solid var(--line); border-radius:14px; color:var(--muted); font-size:14px; }
+  .note.error { border-color:var(--danger); color:var(--danger); }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  table { width:100%; border-collapse:collapse; margin-top:16px; font-size:14px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:500; }
+  .pill { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
   footer { max-width:960px; margin:0 auto; padding:0 24px 56px; color:var(--muted); font-size:13px; }
+  h2.section { font-size:16px; margin:32px 0 0; }
 </style>
 </head>
 <body>
 <header>
   <h1>Bansify Pay</h1>
-  <p class="lede">One account, one bill. Plans and add-ons that unlock extra storage, a verified badge and the Plus tier across every Bansify product.</p>
+  <nav>
+    <a href="#/" data-nav="catalog">Plans</a>
+    <a href="#/account" data-nav="account">Your account</a>
+  </nav>
 </header>
-<main>
-  <div class="grid" id="catalog">
-    <div class="card"><p>Loading plans…</p></div>
-  </div>
-  <div class="status" id="status">Checking the billing service…</div>
-</main>
+<main id="view"></main>
 <footer>
-  Payments are processed by our payment partner. Card details never touch Bansify servers.
+  Payments are processed by our payment partner; card details never touch Bansify servers.
   Prices include applicable taxes where shown at checkout.
 </footer>
 <script>
-  const money = (paise) => '₹' + (paise / 100).toLocaleString('en-IN');
-  const every = (interval) => interval === 'month' ? ' / month' : interval === 'year' ? ' / year' : ' one time';
+const API = '';
+const money = (paise) => '₹' + (paise / 100).toLocaleString('en-IN');
+const every = (i) => i === 'month' ? ' / month' : i === 'year' ? ' / year' : ' one time';
+const view = document.getElementById('view');
 
-  async function load() {
-    const catalog = document.getElementById('catalog');
-    const status = document.getElementById('status');
-    try {
-      const res = await fetch('/api/v1/products', { headers: { accept: 'application/json' } });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const { products } = await res.json();
-      catalog.innerHTML = products.map((p) => {
-        const price = p.prices && p.prices[0];
-        return `<div class="card">
-          <span class="tag">${p.kind === 'subscription' ? 'Plan' : 'Add-on'}</span>
-          <h2>${p.name}</h2>
-          <p>${p.description || ''}</p>
-          <div class="price">${price ? money(price.amountPaise) : '—'}<span>${price ? every(price.interval) : ''}</span></div>
-        </div>`;
-      }).join('') || '<div class="card"><p>No plans published yet.</p></div>';
-      status.textContent = 'Billing service online. Checkout opens in the next release.';
-    } catch (error) {
-      catalog.innerHTML = '<div class="card"><p>Catalog unavailable right now.</p></div>';
-      status.textContent = 'Billing service unreachable: ' + error.message;
-    }
+async function api(path, options) {
+  const res = await fetch(API + path, { credentials: 'include', headers: { accept: 'application/json', ...(options?.body ? { 'content-type': 'application/json' } : {}) }, ...options });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, body };
+}
+
+function setNav(active) {
+  document.querySelectorAll('nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === active));
+}
+
+async function renderCatalog() {
+  setNav('catalog');
+  view.innerHTML = `<p class="lede">One account, one bill. Pick a plan or add-on — every Bansify product reads the same entitlement.</p>
+    <div class="grid" id="catalog"><div class="card"><p>Loading plans…</p></div></div>
+    <div class="note" id="status">Checking the billing service…</div>`;
+  const { ok, body } = await api('/api/v1/products');
+  const grid = document.getElementById('catalog');
+  if (!ok) { grid.innerHTML = '<div class="card"><p>Catalog unavailable right now.</p></div>'; return; }
+  grid.innerHTML = body.products.map((p) => {
+    const price = p.prices?.[0];
+    return `<div class="card">
+      <span class="tag">${p.kind === 'subscription' ? 'Plan' : 'Add-on'}</span>
+      <h2>${p.name}</h2>
+      <p>${p.description || ''}</p>
+      <div class="price">${price ? money(price.amountPaise) : '—'}<span>${price ? every(price.interval) : ''}</span></div>
+      <button data-price="${price?.id || ''}" ${price ? '' : 'disabled'}>Choose</button>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('button[data-price]').forEach((btn) => {
+    btn.addEventListener('click', () => { location.hash = '#/checkout?price=' + encodeURIComponent(btn.dataset.price); });
+  });
+  document.getElementById('status').textContent = 'Billing service online.';
+}
+
+async function renderCheckout(priceId) {
+  setNav('catalog');
+  view.innerHTML = `<p class="lede">Confirming your selection…</p><div class="note" id="status">Contacting the billing service…</div>`;
+  const { ok, status, body } = await api('/api/v1/checkout', { method: 'POST', body: JSON.stringify({ priceId }) });
+  const note = document.getElementById('status');
+  if (status === 401) {
+    view.innerHTML = `<p class="lede">Sign in with your Bansify Account to continue.</p>
+      <div class="row" style="margin-top:20px">
+        <a href="https://accounts.bansify.com/signin?next=https%3A%2F%2Fpay.bansify.com%2F%23%2Fcheckout%3Fprice%3D${encodeURIComponent(priceId)}">
+          <button>Sign in</button>
+        </a>
+        <a href="#/"><button class="secondary">Back to plans</button></a>
+      </div>`;
+    return;
   }
-  load();
+  if (status === 503 && body.error === 'payments_not_configured') {
+    view.innerHTML = `<p class="lede">Checkout is not live yet.</p>
+      <div class="note">The payment provider keys are not installed, so nothing can be charged. Your selection:
+        <strong>${body.product?.name || priceId}</strong> — ${body.price ? money(body.price.amountPaise) + every(body.price.interval) : ''}.</div>
+      <div class="row" style="margin-top:20px"><a href="#/"><button class="secondary">Back to plans</button></a></div>`;
+    return;
+  }
+  if (body.checkoutUrl) { location.href = body.checkoutUrl; return; }
+  note.className = 'note error';
+  note.textContent = 'Could not start checkout: ' + (body.error || status);
+}
+
+async function renderAccount() {
+  setNav('account');
+  view.innerHTML = `<p class="lede">Your plan, add-ons and what they unlock.</p><div class="note" id="status">Loading…</div>`;
+  const ent = await api('/api/v1/me/entitlements');
+  if (ent.status === 401) {
+    view.innerHTML = `<p class="lede">Sign in to see your plan.</p>
+      <div class="row" style="margin-top:20px">
+        <a href="https://accounts.bansify.com/signin?next=https%3A%2F%2Fpay.bansify.com%2F%23%2Faccount"><button>Sign in</button></a>
+      </div>`;
+    return;
+  }
+  const subs = await api('/api/v1/me/subscriptions');
+  const keys = Object.entries(ent.body.entitlements || {});
+  const rows = (subs.body.subscriptions || []).map((s) => `<tr>
+      <td>${s.productName || s.productId}</td>
+      <td><span class="pill">${s.status}</span></td>
+      <td>${s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString('en-IN') : '—'}</td>
+    </tr>`).join('');
+  view.innerHTML = `<p class="lede">Your plan, add-ons and what they unlock.</p>
+    <h2 class="section">Subscriptions</h2>
+    ${rows ? `<table><thead><tr><th>Product</th><th>Status</th><th>Renews</th></tr></thead><tbody>${rows}</tbody></table>`
+           : '<div class="note">No active subscriptions yet.</div>'}
+    <h2 class="section">What you have unlocked</h2>
+    ${keys.length ? `<table><thead><tr><th>Entitlement</th><th>Value</th></tr></thead><tbody>
+        ${keys.map(([k, v]) => `<tr><td><code>${k}</code></td><td>${JSON.stringify(v)}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="note">Nothing unlocked yet.</div>'}
+    <div class="row" style="margin-top:24px"><a href="#/"><button class="secondary">Browse plans</button></a></div>`;
+}
+
+function route() {
+  const hash = location.hash || '#/';
+  const [path, query] = hash.replace(/^#/, '').split('?');
+  if (path === '/account') return renderAccount();
+  if (path === '/checkout') {
+    const priceId = new URLSearchParams(query || '').get('price');
+    if (priceId) return renderCheckout(priceId);
+  }
+  return renderCatalog();
+}
+window.addEventListener('hashchange', route);
+route();
 </script>
 </body>
 </html>
