@@ -1,0 +1,21 @@
+name = "pay"
+main = "src/index.ts"
+compatibility_date = "2025-11-01"
+
+# Bansify Pay: one Worker for the catalog, entitlements and (later) Razorpay webhooks.
+routes = [
+  { pattern = "pay.bansify.com/api/*", zone_name = "bansify.com" }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "payments"
+database_id = "83e2f480-33a9-4e76-825f-9f6096c1dd1c"
+
+[vars]
+ENVIRONMENT = "production"
+AUTH_HUB_URL = "https://api.bansify.com"
+APP_DOMAIN = "bansify.com"
+# Secrets (set in the dashboard, never here):
+#   PAY_INTERNAL_TOKEN   service token for server-to-server entitlement reads
+#   RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET / RAZORPAY_WEBHOOK_SECRET
