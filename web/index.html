@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bansify Pay</title>
+<meta name="description" content="One account, one bill — plans and add-ons for every Bansify product." />
+<style>
+  :root { color-scheme: light dark; --bg:#ffffff; --fg:#111318; --muted:#5f6673; --line:#e6e8ec; --card:#fafbfc; --accent:#0494f4; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d0f13; --fg:#f2f4f7; --muted:#9aa1ad; --line:#232833; --card:#14171d; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { padding:56px 24px 24px; max-width:960px; margin:0 auto; }
+  h1 { font-size:clamp(28px,5vw,40px); margin:0 0 8px; letter-spacing:-0.02em; }
+  p.lede { color:var(--muted); margin:0; max-width:56ch; }
+  main { max-width:960px; margin:0 auto; padding:8px 24px 72px; }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:32px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .card h2 { margin:0 0 4px; font-size:18px; }
+  .card p { margin:0; color:var(--muted); font-size:14px; }
+  .price { margin:16px 0 0; font-size:24px; font-weight:650; letter-spacing:-0.02em; }
+  .price span { font-size:14px; font-weight:400; color:var(--muted); }
+  .tag { display:inline-block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); border:1px solid currentColor; border-radius:999px; padding:2px 8px; margin-bottom:12px; }
+  .status { margin-top:40px; padding:16px 20px; border:1px solid var(--line); border-radius:14px; color:var(--muted); font-size:14px; }
+  a { color:var(--accent); }
+  footer { max-width:960px; margin:0 auto; padding:0 24px 56px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bansify Pay</h1>
+  <p class="lede">One account, one bill. Plans and add-ons that unlock extra storage, a verified badge and the Plus tier across every Bansify product.</p>
+</header>
+<main>
+  <div class="grid" id="catalog">
+    <div class="card"><p>Loading plans…</p></div>
+  </div>
+  <div class="status" id="status">Checking the billing service…</div>
+</main>
+<footer>
+  Payments are processed by our payment partner. Card details never touch Bansify servers.
+  Prices include applicable taxes where shown at checkout.
+</footer>
+<script>
+  const money = (paise) => '₹' + (paise / 100).toLocaleString('en-IN');
+  const every = (interval) => interval === 'month' ? ' / month' : interval === 'year' ? ' / year' : ' one time';
+
+  async function load() {
+    const catalog = document.getElementById('catalog');
+    const status = document.getElementById('status');
+    try {
+      const res = await fetch('/api/v1/products', { headers: { accept: 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const { products } = await res.json();
+      catalog.innerHTML = products.map((p) => {
+        const price = p.prices && p.prices[0];
+        return `<div class="card">
+          <span class="tag">${p.kind === 'subscription' ? 'Plan' : 'Add-on'}</span>
+          <h2>${p.name}</h2>
+          <p>${p.description || ''}</p>
+          <div class="price">${price ? money(price.amountPaise) : '—'}<span>${price ? every(price.interval) : ''}</span></div>
+        </div>`;
+      }).join('') || '<div class="card"><p>No plans published yet.</p></div>';
+      status.textContent = 'Billing service online. Checkout opens in the next release.';
+    } catch (error) {
+      catalog.innerHTML = '<div class="card"><p>Catalog unavailable right now.</p></div>';
+      status.textContent = 'Billing service unreachable: ' + error.message;
+    }
+  }
+  load();
+</script>
+</body>
+</html>
