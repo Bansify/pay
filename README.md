@@ -5,6 +5,15 @@ Unified payments, subscriptions and entitlements for the Bansify ecosystem.
 One service decides what a user is allowed to do (extra Drive storage, verified badge, Plus tier),
 so no product has to implement billing itself.
 
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [docs/SETUP.md](docs/SETUP.md) | first-time setup: database, Worker, Pages, DNS, secrets, verification |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | structure, data model, entitlement contract, security and failure behaviour |
+| [docs/API.md](docs/API.md) | endpoint reference with request/response shapes |
+| [docs/PLAN.md](docs/PLAN.md) | phased roadmap and open questions for the owner |
+
 ## Phase 1 (live)
 
 | Endpoint | Purpose |
