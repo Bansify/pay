@@ -14,13 +14,16 @@ code is merged.
 
 ## Phase 2 — Checkout (next)
 
+- [x] `POST /api/v1/checkout` — creates an order and returns a checkout URL
+- [x] Test provider (`PROVIDER=mock`): order → settle → subscription → entitlements, no money
+- [x] `PAY_INTERNAL_TOKEN` generated and installed on the Worker
+- [x] Billing portal view: subscriptions and unlocked entitlements
 - [ ] Razorpay **test mode** keys wired as Worker secrets
-- [ ] `POST /api/v1/checkout` — creates an order/subscription, returns the hosted checkout URL
+- [ ] Razorpay order creation + hosted checkout (replaces the mock link)
 - [ ] `/pay/return` page — "payment received, activating…" (no entitlement granted here)
-- [ ] Billing portal page: current plan, add-ons, invoices, cancel
-- [ ] `PAY_INTERNAL_TOKEN` generated and shared with consumers
+- [ ] Invoices list in the portal, cancel flow
 
-Exit criteria: a test-mode payment completes end to end and the row lands in `payments`.
+Exit criteria: a payment completes end to end and the row lands in `payments`.
 
 ## Phase 3 — Webhooks and entitlements
 

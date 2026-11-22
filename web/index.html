@@ -89,7 +89,11 @@ async function renderCatalog() {
   grid.querySelectorAll('button[data-price]').forEach((btn) => {
     btn.addEventListener('click', () => { location.hash = '#/checkout?price=' + encodeURIComponent(btn.dataset.price); });
   });
-  document.getElementById('status').textContent = 'Billing service online.';
+  const health = await api('/api/health');
+  const provider = health.body?.provider || 'mock';
+  document.getElementById('status').textContent = provider === 'mock'
+    ? 'Billing service online — running on the test provider, no real payments are taken.'
+    : 'Billing service online.';
 }
 
 async function renderCheckout(priceId) {
@@ -148,10 +152,44 @@ async function renderAccount() {
     <div class="row" style="margin-top:24px"><a href="#/"><button class="secondary">Browse plans</button></a></div>`;
 }
 
+async function renderPay(params) {
+  setNav('catalog');
+  const orderId = params.get('order');
+  const amount = Number(params.get('amount') || 0);
+  const name = params.get('name') || 'your selection';
+  view.innerHTML = `<p class="lede">Test checkout</p>
+    <div class="note"><strong>Test mode</strong> — no money moves and no card details are collected. This settles the order so the rest of the flow can be verified.</div>
+    <div class="card" style="margin-top:16px">
+      <span class="tag">Order</span>
+      <h2>${name}</h2>
+      <p style="font-family:ui-monospace,monospace">${orderId || 'unknown'}</p>
+      <div class="price">${money(amount)}<span>${every(params.get('interval') || 'month')}</span></div>
+      <div class="row" style="margin-top:12px">
+        <button id="pay">Pay ${money(amount)} (test)</button>
+        <a href="#/"><button class="secondary">Cancel</button></a>
+      </div>
+    </div>
+    <div class="note" id="result"></div>`;
+  const button = document.getElementById('pay');
+  const result = document.getElementById('result');
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    result.textContent = 'Settling the order…';
+    const { ok, status, body } = await api('/api/v1/mock/pay', { method: 'POST', body: JSON.stringify({ orderId }) });
+    if (status === 401) { location.href = 'https://accounts.bansify.com/signin?next=' + encodeURIComponent(location.href); return; }
+    if (!ok) { result.className = 'note error'; result.textContent = 'Could not settle: ' + (body.error || status); button.disabled = false; return; }
+    result.className = 'note';
+    const keys = Object.keys(body.entitlements || {});
+    result.innerHTML = 'Done. Unlocked: <strong>' + (keys.join(', ') || 'nothing') + '</strong>. ' +
+      '<a href="#/account">See your account</a>';
+  });
+}
+
 function route() {
   const hash = location.hash || '#/';
   const [path, query] = hash.replace(/^#/, '').split('?');
   if (path === '/account') return renderAccount();
+  if (path === '/pay') return renderPay(new URLSearchParams(query || ''));
   if (path === '/checkout') {
     const priceId = new URLSearchParams(query || '').get('price');
     if (priceId) return renderCheckout(priceId);

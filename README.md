@@ -22,6 +22,9 @@ so no product has to implement billing itself.
 | `GET /api/v1/products` | public catalog: products with their prices |
 | `GET /api/v1/entitlements/:userId` | service-to-service read, requires `PAY_INTERNAL_TOKEN` |
 | `GET /api/v1/me/entitlements` | user-scoped read, authenticated through Bansify Accounts |
+| `GET /api/v1/me/subscriptions` | the caller's subscriptions |
+| `POST /api/v1/checkout` | create an order, get a checkout URL |
+| `POST /api/v1/mock/pay` | test provider only: settle an order with no money |
 
 Deployed at `pay.bansify.com` (Worker `pay`, route `pay.bansify.com/api/*`), backed by the D1
 database `payments` (`83e2f480-33a9-4e76-825f-9f6096c1dd1c`).
@@ -46,6 +49,18 @@ Products grant keys that other services read:
 
 Consumers call `GET /api/v1/entitlements/:userId` with `x-internal-token` and cache the answer
 briefly (60s is plenty; a revoked entitlement must not survive longer than that).
+
+## Providers
+
+`PROVIDER` selects how money is collected:
+
+| Value | Behaviour |
+| --- | --- |
+| `mock` (current) | `POST /api/v1/checkout` returns a link to our own test checkout page; `POST /api/v1/mock/pay` settles the order, opens the subscription and grants entitlements. No money moves, no gateway account needed. |
+| `razorpay` | Real gateway: hosted checkout, then webhooks settle the order. Enabled automatically when the Razorpay keys are installed. |
+
+Both paths end in the same `settleOrder()` function, so switching providers does not change how
+entitlements are granted.
 
 ## Next phases
 

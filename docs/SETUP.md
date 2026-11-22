@@ -78,6 +78,7 @@ Set these in **Workers → pay → Settings → Variables and Secrets** (never i
 
 | Secret | Purpose |
 | --- | --- |
+| `PROVIDER` (plain var) | `mock` while no gateway is connected, `razorpay` once keys exist |
 | `PAY_INTERNAL_TOKEN` | service-to-service reads of `/api/v1/entitlements/:userId` |
 | `RAZORPAY_KEY_ID` | checkout (Phase 2) |
 | `RAZORPAY_KEY_SECRET` | checkout (Phase 2) |
