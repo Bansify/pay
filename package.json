@@ -2,6 +2,12 @@
   "name": "bansify-pay",
   "private": true,
   "type": "module",
-  "scripts": { "build": "tsc --noEmit", "deploy": "wrangler deploy" },
-  "devDependencies": { "typescript": "~5.8.2", "wrangler": "^4.151.3" }
+  "scripts": {
+    "build": "tsc --noEmit && rm -rf dist && cp -r web dist",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2",
+    "wrangler": "^4.151.3"
+  }
 }
