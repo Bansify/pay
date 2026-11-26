@@ -52,8 +52,15 @@
   footer { max-width:960px; margin:0 auto; padding:0 24px 56px; color:var(--muted); font-size:13px; }
   h2.section { font-size:16px; margin:32px 0 0; }
 </style>
+<link rel="stylesheet" href="/css/shell.css" />
 </head>
 <body>
+<div id="bs-splash" aria-live="polite">
+  <span class="bs-splash-tile"><img src="/icon-192.png" alt="" /></span>
+  <p class="bs-splash-name"><b>Bansify</b> <span>Pay</span></p>
+  <span class="bs-splash-line"><span></span></span>
+  <p class="bs-splash-status">Checking your Bansify account…</p>
+</div>
 <header>
   <h1>Bansify Pay</h1>
   <nav>
@@ -213,5 +220,6 @@ function route() {
 window.addEventListener('hashchange', route);
 route();
 </script>
+<script src="/js/shell.js" defer></script>
 </body>
 </html>

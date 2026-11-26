@@ -1,0 +1,454 @@
+/*
+ * Bansify shell for the Accounts dashboard — the same five cards as bansify.com, Mail
+ * and AI: rail, search pill + social card, content, app dock. The dashboard's own app
+ * bar and sidebar stay in the DOM (their JavaScript keeps driving them) but are hidden
+ * on desktop; everything the user sees is these cards.
+ */
+
+:root {
+  --bs-canvas: #f5f6f7;
+  --bs-card: #ffffff;
+  --bs-border: #e5e7eb;
+  --bs-ink: #17181a;
+  --bs-muted: #5f6368;
+  --bs-pill: #f4f4f5;
+  --bs-pill-hover: #e7e7e9;
+  --bs-brand: #0494f4;
+  --bs-radius: 16px;
+  --bs-panel: 260px;
+  --bs-rail: 64px;
+  --bs-dock: 64px;
+  --bs-gap: 12px;
+  --bs-top: 48px;
+}
+
+html[data-theme='dark'],
+body.dark {
+  --bs-canvas: #212121;
+  --bs-card: #2a2a2a;
+  --bs-border: #333333;
+  --bs-ink: #e8eaed;
+  --bs-muted: #9aa0a6;
+  --bs-pill: #303030;
+  --bs-pill-hover: #3a3a3a;
+}
+
+body.bs-shell-on {
+  background: var(--bs-canvas) !important;
+  padding: var(--bs-gap) !important;
+  color: var(--bs-ink);
+}
+
+/* ── content card ─────────────────────────────────────────────────────── */
+body.bs-shell-on #view {
+  /* the card sits below the search/social row and stops before the dock */
+  margin: calc(var(--bs-top) + var(--bs-gap)) calc(var(--bs-dock) + var(--bs-gap) * 2) 0
+    calc(var(--bs-panel) + var(--bs-gap) * 2) !important;
+  padding: 8px 0 16px !important;
+  height: calc(100dvh - (var(--bs-gap) * 2) - var(--bs-top) - var(--bs-gap));
+  overflow-y: auto;
+  background: var(--bs-card);
+  border: 1px solid var(--bs-border);
+  border-radius: var(--bs-radius);
+}
+body.bs-shell-on.bs-collapsed #view {
+  margin-left: calc(var(--bs-rail) + var(--bs-gap) * 2) !important;
+}
+body.bs-shell-on #view > * {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* the dashboard's own chrome is replaced by the shell on desktop */
+body.bs-shell-on .appbar,
+body.bs-shell-on .me-sidebar {
+  display: none !important;
+}
+
+/* ── top row: search pill + social card ───────────────────────────────── */
+.bs-top {
+  position: fixed;
+  top: var(--bs-gap);
+  left: calc(var(--bs-panel) + var(--bs-gap) * 2);
+  right: calc(var(--bs-dock) + var(--bs-gap) * 2);
+  height: var(--bs-top);
+  display: flex;
+  gap: var(--bs-gap);
+  z-index: 55;
+}
+body.bs-collapsed .bs-top {
+  left: calc(var(--bs-rail) + var(--bs-gap) * 2);
+}
+
+.bs-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--bs-border);
+  background: var(--bs-card);
+}
+.bs-search .msym {
+  font-size: 18px;
+  color: var(--bs-muted);
+}
+.bs-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--bs-ink);
+  font-size: 13px;
+}
+
+.bs-social {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: var(--bs-radius);
+  border: 1px solid var(--bs-border);
+  background: var(--bs-card);
+}
+.bs-social a {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+  transition: filter 0.15s ease;
+}
+.bs-social a:hover {
+  filter: brightness(1.1);
+}
+
+/* ── left panel ───────────────────────────────────────────────────────── */
+.bs-panel {
+  position: fixed;
+  top: var(--bs-gap);
+  bottom: var(--bs-gap);
+  left: var(--bs-gap);
+  width: var(--bs-panel);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bs-border);
+  border-radius: var(--bs-radius);
+  background: var(--bs-card);
+  overflow: hidden;
+}
+body.bs-collapsed .bs-panel {
+  width: var(--bs-rail);
+}
+
+.bs-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 64px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+}
+body.bs-collapsed .bs-brand {
+  justify-content: center;
+  padding: 0;
+}
+.bs-brand-mark {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  background: var(--bs-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 0;
+  cursor: pointer;
+}
+.bs-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.bs-brand-name {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bs-brand-name b {
+  color: var(--bs-brand);
+  font-weight: 900;
+}
+body.bs-collapsed .bs-brand-name,
+body.bs-collapsed .bs-collapse {
+  display: none;
+}
+.bs-collapse {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bs-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* nav rows are pills, inset 2px, exactly like the other apps */
+.bs-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.bs-collapsed .bs-nav {
+  padding: 0;
+  align-items: center;
+}
+.bs-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--bs-ink);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0;
+  text-align: left;
+}
+body.bs-collapsed .bs-nav-item {
+  width: 40px;
+  justify-content: center;
+}
+.bs-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 12px;
+  background: var(--bs-pill);
+  transition: background 0.15s ease;
+}
+.bs-nav-item:hover::before {
+  background: var(--bs-pill-hover);
+}
+.bs-nav-item.is-active::before {
+  background: var(--bs-brand);
+  box-shadow: 0 1px 3px rgba(4, 148, 244, 0.25);
+}
+.bs-nav-item.is-active {
+  color: #fff;
+  font-weight: 600;
+}
+.bs-nav-item .msym {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+.bs-nav-item > span:last-child {
+  position: relative;
+  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.bs-collapsed .bs-nav-item > span:last-child {
+  display: none;
+}
+
+/* footer: divider, theme, account */
+.bs-footer {
+  flex: 0 0 auto;
+}
+.bs-divider {
+  height: 1px;
+  background: var(--bs-border);
+  margin: 0 12px;
+}
+.bs-utils {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+}
+body.bs-collapsed .bs-utils {
+  justify-content: center;
+  padding: 8px 0;
+}
+.bs-util {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bs-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bs-util:hover {
+  background: var(--bs-pill);
+}
+
+.bs-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+body.bs-collapsed .bs-profile {
+  justify-content: center;
+  padding: 12px 0;
+}
+.bs-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--bs-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+.bs-profile-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+body.bs-collapsed .bs-profile-text {
+  display: none;
+}
+.bs-profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bs-profile-email {
+  font-size: 11px;
+  color: var(--bs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bs-theme-inline {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--bs-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+body.bs-collapsed .bs-theme-inline {
+  display: none;
+}
+
+
+/* Pay's own header and footer are replaced by the shell. */
+body.bs-shell-on > header,
+body.bs-shell-on > footer {
+  display: none !important;
+}
+
+
+/* Mail-style startup screen, shown until the shell is ready. */
+#bs-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--bs-canvas);
+}
+.bs-splash-tile {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  background: var(--bs-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(4, 148, 244, 0.25);
+}
+.bs-splash-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bs-splash-name { margin: 0; font-size: 19px; font-weight: 900; letter-spacing: -0.02em; color: var(--bs-ink); }
+.bs-splash-name b { color: var(--bs-brand); }
+.bs-splash-line {
+  width: 160px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  display: block;
+}
+html[data-theme='dark'] .bs-splash-line, body.dark .bs-splash-line { background: #333333; }
+.bs-splash-line > span {
+  display: block;
+  width: 33%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--bs-brand);
+  animation: bs-loading 1.2s ease-in-out infinite;
+}
+@keyframes bs-loading {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+.bs-splash-status { margin: 0; font-size: 12px; color: var(--bs-muted); }
