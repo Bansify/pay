@@ -1,0 +1,27 @@
+name: Build Bansify TWA APK & Play Store AAB
+
+# The build, signing and release live in Bansify/bansifywrap, so this file only
+# names the app and passes the version through.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'App version name, e.g. 1.0.0 (required - no auto numbering)'
+        required: true
+        default: ''
+        type: string
+      version_code:
+        description: 'Play Store integer version code, e.g. 1 (required - no auto numbering)'
+        required: true
+        default: ''
+        type: string
+
+jobs:
+  release:
+    uses: Bansify/bansifywrap/.github/workflows/twa-release.yml@main
+    with:
+      app_slug: pay
+      version_name: ${{ inputs.version_name }}
+      version_code: ${{ inputs.version_code }}
+    secrets: inherit

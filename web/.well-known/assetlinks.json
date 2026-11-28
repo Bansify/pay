@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bansify.pay",
+      "sha256_cert_fingerprints": [
+        "0D:B3:70:E9:67:38:74:31:08:62:8C:4B:75:C4:7E:29:12:4C:06:90:7A:A9:83:F0:D8:F5:59:FC:0E:94:3B:AF"
+      ]
+    }
+  }
+]

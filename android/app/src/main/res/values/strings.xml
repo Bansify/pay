@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bansify Pay</string>
+
+    <!-- Shown under the app name on the native launch screen. -->
+    <string name="bansify_wrap_tagline">India's Pay</string>
+
+    <!-- Shown at the bottom of the native launch screen. -->
+    <string name="bansify_wrap_credit">Made In India By Bansify</string>
+
+    <!-- Digital Asset Links, app -> website. Chrome hides the URL bar only when
+         this origin also publishes /.well-known/assetlinks.json for this package
+         and signing certificate. -->
+    <string name="asset_statements">[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"web\",\"site\":\"https://pay.bansify.com\"}}]</string>
+</resources>
