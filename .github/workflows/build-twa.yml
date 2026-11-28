@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'App version name, e.g. 1.0.0 (required - no auto numbering)'
+        description: 'App version name, e.g. 1.0.11 (required - no auto numbering)'
         required: true
         default: ''
         type: string
       version_code:
-        description: 'Play Store integer version code, e.g. 1 (required - no auto numbering)'
+        description: 'Play Store integer version code, e.g. 11 (required - no auto numbering)'
         required: true
         default: ''
         type: string

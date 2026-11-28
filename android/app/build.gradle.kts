@@ -58,7 +58,7 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.github.Bansify:bansifywrap:1.0.0")
+    implementation("com.github.Bansify:bansifywrap:1.1.0")
     // The library's splash theme inherits from an AppCompat theme.
     implementation("androidx.appcompat:appcompat:1.7.0")
 }
